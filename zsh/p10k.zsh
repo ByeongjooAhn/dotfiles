@@ -33,7 +33,7 @@
   typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
     # =========================[ Line #1 ]=========================
     # os_icon               # os identifier
-    context
+    # context
     dir                     # current directory
     vcs                     # git status
     # =========================[ Line #2 ]=========================
@@ -82,7 +82,7 @@
     azure                   # azure account name (https://docs.microsoft.com/en-us/cli/azure)
     gcloud                  # google cloud cli account and project (https://cloud.google.com/)
     google_app_cred         # google application credentials (https://cloud.google.com/docs/authentication/production)
-    # context               # user@hostname
+    context               # user@hostname
     nordvpn                 # nordvpn connection status, linux only (https://nordvpn.com/)
     ranger                  # ranger shell (https://github.com/ranger/ranger)
     nnn                     # nnn shell (https://github.com/jarun/nnn)
@@ -838,12 +838,36 @@
   typeset -g POWERLEVEL9K_CONTEXT_FOREGROUND=180
 
   local CONTEXT_TEMPLATE="%B%F{yellow}%n%f%b%F{242}@%B%F{${PROMPT_HOST_COLOR:-cyan}}%m%f%b"
-  # Context format when running with privileges: bold user@hostname.
-  typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%B%n@%m'
-  # [@] Context format when in SSH without privileges: user@hostname.
-  typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_TEMPLATE=${CONTEXT_TEMPLATE}
-  # [@] Default context format (no privileges, no SSH): user@hostname.
-  typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE=${CONTEXT_TEMPLATE}
+  # Custom hostname for Bolt
+  set_custom_hostname_prompt() {
+      local full_hostname=$(hostname)
+      local desired_hostname
+
+      # Attempt to extract the desired part of the hostname using regex
+      if [[ $full_hostname =~ bolt-([^-]+)- ]]; then
+          desired_hostname=${match[1]}
+          # If extraction is successful, use a custom prompt format with the desired hostname part
+          typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE="%B$desired_hostname"
+          typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_TEMPLATE="%B$desired_hostname"
+          typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE="%B$desired_hostname"
+          typeset -g POWERLEVEL9K_CONTEXT_VISUAL_IDENTIFIER_EXPANSION='🔩'
+      else
+          # Fallback to a default prompt format using the full hostname
+          typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%B%n'
+          typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_TEMPLATE='%B%n'
+          typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%B%n'
+          typeset -g POWERLEVEL9K_CONTEXT_VISUAL_IDENTIFIER_EXPANSION=''         
+      fi
+  }
+  set_custom_hostname_prompt
+
+  # Original context from wookayin
+  # # Context format when running with privileges: bold user@hostname.
+  # typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%B%n@%m'
+  # # [@] Context format when in SSH without privileges: user@hostname.
+  # typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_TEMPLATE=${CONTEXT_TEMPLATE}
+  # # [@] Default context format (no privileges, no SSH): user@hostname.
+  # typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE=${CONTEXT_TEMPLATE}
 
   # [@] ALWAYS SHOW CONTEXT: <s>Don't show context unless running with privileges or in SSH.</s>
   # Tip: Remove the next line to always show context.
